@@ -15,7 +15,7 @@
 "background": {
   "scripts": ["pdf-lib.min.js", "background.js"]
 },
-  },
+  }
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
