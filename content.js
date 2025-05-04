@@ -1,29 +1,35 @@
-function injectAquamarkButtons() {
-  const buttons = document.querySelectorAll('.aQw');
+function injectAquamarkButton() {
+  const toolbar = document.querySelector("div[command='Files']")?.parentElement;
+  if (!toolbar || document.querySelector("#aquamark-btn")) return;
 
-  buttons.forEach(btn => {
-    // Skip if our icon is already inside this specific button
-    if (btn.querySelector('[data-aquamark]')) return;
+  const btn = document.createElement("button");
+  btn.id = "aquamark-btn";
+  btn.title = "Watermark with Aquamark";
+  btn.style.cssText = `
+    margin-left: 10px;
+    padding: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  `;
 
-    const icon = document.createElement("img");
-    icon.src = chrome.runtime.getURL("logo.png");
-    icon.style.height = "20px";
-    icon.style.marginLeft = "6px";
-    icon.style.cursor = "pointer";
-    icon.title = "Protect with Aquamark";
-    icon.setAttribute("data-aquamark", "true");
+  const img = document.createElement("img");
+  img.src = chrome.runtime.getURL("icon.png");
+  img.alt = "Aquamark";
+  img.style.cssText = `
+    width: 24px;
+    height: 24px;
+  `;
 
-    icon.addEventListener("click", () => {
-      const fileName = btn.closest('.aQH')?.innerText?.trim() || 'protected.pdf';
-      chrome.runtime.sendMessage({ type: "watermark", fileName });
-    });
+  btn.appendChild(img);
+  btn.onclick = () => {
+    chrome.runtime.sendMessage({ action: "watermark" });
+  };
 
-    btn.appendChild(icon);
-  });
+  toolbar.appendChild(btn);
 }
 
-// Wait for Gmail to load, then inject once and again only when DOM changes
-const observer = new MutationObserver(injectAquamarkButtons);
+const observer = new MutationObserver(() => injectAquamarkButton());
 observer.observe(document.body, { childList: true, subtree: true });
-
-injectAquamarkButtons(); // initial run
