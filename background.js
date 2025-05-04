@@ -1,3 +1,4 @@
+import { watermarkPDF } from './watermark.js';
 import { createClient } from './supabase.umd.js';
 import { PDFDocument, rgb, degrees } from './pdf-lib.min.js';
 
