@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -44,19 +45,16 @@
   <button id="processBtn">Watermark Now</button>
   <div id="status"></div>
 
-  <!-- Load Outseta session locally -->
- <script>
-  window.o_options = {
-    domain: 'aquamark.outseta.com',
-    load: 'auth,nocode'
-  };
-</script>
+  <!-- Load Outseta config -->
+  <script src="outseta-config.js"></script>
+
+  <!-- Load Outseta locally -->
   <script src="outseta.min.js" data-options="o_options"></script>
 
   <!-- Load PDFLib -->
   <script src="pdf-lib.min.js"></script>
 
-  <!-- Load custom popup logic -->
+  <!-- Load popup logic -->
   <script src="popup.js" type="module"></script>
 </body>
 </html>
