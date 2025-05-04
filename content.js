@@ -1,3 +1,11 @@
+// Inject PDFLib script into Gmail page
+const pdfLibScript = document.createElement('script');
+pdfLibScript.src = chrome.runtime.getURL('pdf-lib.min.js');
+pdfLibScript.onload = () => {
+  console.log('✅ PDFLib loaded into Gmail');
+};
+(document.head || document.documentElement).appendChild(pdfLibScript);
+
 function waitForGmailAttachments() {
   const attachmentButtons = document.querySelectorAll('div[data-tooltip^="Download"]');
 
