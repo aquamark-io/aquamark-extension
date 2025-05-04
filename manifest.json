@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Aquamark Watermarker",
+  "version": "1.0",
+  "description": "Watermark bank statements directly from Gmail.",
+  "permissions": ["storage", "downloads", "scripting", "activeTab"],
+  "host_permissions": ["https://dvzmnikrvkvgragzhrof.supabase.co/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["hologram.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
