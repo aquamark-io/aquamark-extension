@@ -1,3 +1,4 @@
+importScripts("supabase.umd.js");
 const { PDFDocument, rgb, degrees } = PDFLib;
 
 // Supabase config
