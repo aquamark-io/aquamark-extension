@@ -20,20 +20,23 @@ async function decryptPDF(blob) {
   return await response.arrayBuffer();
 }
 
-// Observe Gmail for attachment cards
-const observer = new MutationObserver(() => {
+// Observe Gmail DOM
+const observer = new MutationObserver(() => waitForGmailAttachments());
+observer.observe(document.body, { childList: true, subtree: true });
+
+function waitForGmailAttachments() {
   const attachments = document.querySelectorAll('div.aQH');
 
   attachments.forEach(section => {
     const pdfLinks = section.querySelectorAll('a[href$=".pdf"]');
 
     pdfLinks.forEach(link => {
-      if (link.dataset.aquamark) return;
-      link.dataset.aquamark = "true";
+      if (link.parentElement.querySelector('.aquamark-icon-btn')) return;
 
       const iconBtn = document.createElement("img");
       iconBtn.src = "https://www.aquamark.io/logo.png";
       iconBtn.title = "Watermark this file";
+      iconBtn.className = "aquamark-icon-btn";
       iconBtn.style.width = "27px";
       iconBtn.style.height = "27px";
       iconBtn.style.margin = "0 2px 0 0";
@@ -132,9 +135,7 @@ const observer = new MutationObserver(() => {
         }
       });
 
-      link.parentElement?.appendChild(iconBtn);
+      link.parentElement.appendChild(iconBtn);
     });
   });
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
+}
