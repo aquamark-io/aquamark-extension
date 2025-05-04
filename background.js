@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, degrees } from 'pdf-lib';
+const { PDFDocument, rgb, degrees } = PDFLib;
 
 // Supabase config
 const SUPABASE_URL = 'https://dvzmnikrvkvgragzhrof.supabase.co';
