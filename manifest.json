@@ -31,9 +31,9 @@
     "default_title": "Aquamark"
   },
   "web_accessible_resources": [
-    {
-      "resources": ["pdf-lib.min.js", "logo.png"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  {
+    "resources": ["supabase.umd.js", "logo.png"],
+    "matches": ["<all_urls>"]
+  }
+]
 }
