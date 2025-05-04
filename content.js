@@ -26,7 +26,7 @@ function waitForGmailAttachments() {
       iconBtn.className = "aquamark-icon-btn";
     iconBtn.style.width = "27px";
 iconBtn.style.height = "27px";
-iconBtn.style.margin = "0 4px";
+iconBtn.style.margin = "0 2px";
 iconBtn.style.cursor = "pointer";
 iconBtn.style.verticalAlign = "top";
 iconBtn.style.borderRadius = "4px";
