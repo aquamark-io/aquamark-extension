@@ -45,16 +45,10 @@
   <button id="processBtn">Watermark Now</button>
   <div id="status"></div>
 
-  <!-- Load Outseta config -->
-  <script src="outseta-config.js"></script>
-
-  <!-- Load Outseta locally -->
-  <script src="outseta.min.js" data-options="o_options"></script>
-
-  <!-- Load PDFLib -->
+  <!-- Load dependencies in correct order -->
   <script src="pdf-lib.min.js"></script>
-
-  <!-- Load popup logic -->
-  <script src="popup.js" type="module"></script>
+  <script src="outseta-config.js"></script>
+  <script src="outseta.min.js" data-options="o_options"></script>
+  <script src="popup.js"></script>
 </body>
 </html>
