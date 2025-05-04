@@ -1,55 +1,39 @@
 {
   "manifest_version": 3,
-  "name": "Aquamark Gmail Extension",
+  "name": "Aquamark.io",
   "version": "1.0",
-  "description": "Watermark Gmail attachments with your Aquamark logo.",
+  "description": "Instantly watermark PDFs directly from your Gmail inbox.",
   "permissions": [
     "scripting",
-    "downloads",
-    "activeTab",
-    "storage"
+    "storage",
+    "activeTab"
   ],
   "host_permissions": [
     "https://mail.google.com/*",
-    "https://*.supabase.co/*",
-    "https://aquamark-decrypt.onrender.com/*"
+    "https://dvzmnikrvkvgragzhrof.supabase.co/*"
   ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://mail.google.com/*"
-      ],
-      "js": [
-        "content.js"
-      ],
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
-  "action": {
-    "default_icon": {
-      "16": "icon-16.png",
-      "48": "icon-48.png",
-      "128": "icon-128.png"
-    }
-  },
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
     "128": "icon-128.png"
   },
+  "action": {
+    "default_title": "Aquamark"
+  },
   "web_accessible_resources": [
     {
-      "resources": [
-        "icon.png",
-        "hologram.png"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "resources": ["logo.png"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
