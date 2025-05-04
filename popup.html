@@ -45,12 +45,12 @@
   <div id="status"></div>
 
   <!-- Load Outseta session locally -->
-  <script>
-    var o_options = {
-      domain: 'aquamark.outseta.com',
-      load: 'auth,nocode'
-    };
-  </script>
+ <script>
+  window.o_options = {
+    domain: 'aquamark.outseta.com',
+    load: 'auth,nocode'
+  };
+</script>
   <script src="outseta.min.js" data-options="o_options"></script>
 
   <!-- Load PDFLib -->
