@@ -24,8 +24,8 @@ function waitForGmailAttachments() {
       iconBtn.src = "https://www.aquamark.io/logo.png";
       iconBtn.title = "Watermark this file";
       iconBtn.className = "aquamark-icon-btn";
-      iconBtn.style.width = "20px";
-      iconBtn.style.height = "20px";
+      iconBtn.style.width = "28px";
+      iconBtn.style.height = "28px";
       iconBtn.style.marginLeft = "6px";
       iconBtn.style.cursor = "pointer";
       iconBtn.style.verticalAlign = "middle";
