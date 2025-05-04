@@ -12,10 +12,9 @@
     "https://mail.google.com/*",
     "https://dvzmnikrvkvgragzhrof.supabase.co/*"
   ],
-"background": {
-  "scripts": ["pdf-lib.min.js", "background.js"]
-},
-  }
+  "background": {
+    "scripts": ["pdf-lib.min.js", "background.js"]
+  },
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
@@ -31,9 +30,10 @@
   "action": {
     "default_title": "Aquamark"
   },
- "web_accessible_resources": [
-  {
-    "resources": ["pdf-lib.min.js", "logo.png"],
-    "matches": ["<all_urls>"]
-  }
-]
+  "web_accessible_resources": [
+    {
+      "resources": ["pdf-lib.min.js", "logo.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
