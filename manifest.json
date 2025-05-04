@@ -16,12 +16,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://mail.google.com/*"],
-      "js": ["content.js"]
-    }
-  ],
+ 
   "web_accessible_resources": [
     {
       "resources": ["hologram.png"],
