@@ -13,8 +13,7 @@
     "https://dvzmnikrvkvgragzhrof.supabase.co/*"
   ],
 "background": {
-  "service_worker": "background.js",
-  "type": "module"
+  "scripts": ["pdf-lib.min.js", "background.js"]
 },
   },
   "content_scripts": [
