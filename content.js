@@ -5,7 +5,7 @@ document.head.appendChild(pdfLibScript);
 
 // Inject Supabase
 const supabaseScript = document.createElement('script');
-supabaseScript.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+supabaseScript.src = chrome.runtime.getURL("supabase.js");
 supabaseScript.onload = () => {
   window.supabaseLoaded = true;
 };
