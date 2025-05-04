@@ -3,8 +3,8 @@ const pdfLibScript = document.createElement('script');
 pdfLibScript.src = chrome.runtime.getURL('pdf-lib.min.js');
 document.head.appendChild(pdfLibScript);
 
-// Inject Supabase
-const supabaseScript = document.createElement('script');
+// Inject Supabase from local file
+const supabaseScript = document.createElement("script");
 supabaseScript.src = chrome.runtime.getURL("supabase.js");
 supabaseScript.onload = () => {
   window.supabaseLoaded = true;
@@ -14,6 +14,16 @@ document.head.appendChild(supabaseScript);
 // Supabase config
 const SUPABASE_URL = 'https://dvzmnikrvkvgragzhrof.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2em1uaWtydmt2Z3JhZ3pocm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5Njg5NzUsImV4cCI6MjA1OTU0NDk3NX0.FaHsjIRNlgf6YWbe5foz0kJFtCO4FuVFo7KVcfhKPEk';
+
+// Helper: extract Gmail address from DOM
+function getGmailAddress() {
+  const img = document.querySelector('img[aria-label*="@"]');
+  if (img) {
+    const match = img.getAttribute("aria-label").match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (match) return match[1];
+  }
+  return null;
+}
 
 // Helper: decrypt PDF
 async function decryptPDF(blob) {
@@ -30,11 +40,15 @@ async function decryptPDF(blob) {
 // Watermark handler
 async function handleWatermarkClick(link) {
   try {
+    const email = getGmailAddress();
+    if (!email) {
+      alert("❌ Could not detect your Gmail address. Please log into Gmail with your Aquamark account.");
+      return;
+    }
+
     const url = link.getAttribute("href");
     const originalName = (link.textContent || "document").replace(".pdf", "");
 
-    const profile = await Outseta.getUser();
-    const email = profile.Email;
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const logoListRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/logos/${email}`, {
@@ -114,7 +128,7 @@ async function handleWatermarkClick(link) {
     URL.revokeObjectURL(a.href);
   } catch (err) {
     console.error("❌ Error watermarking:", err);
-    alert("❌ Failed to watermark file. See console for details.");
+    alert("❌ Failed to watermark file: " + err.message);
   }
 }
 
