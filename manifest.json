@@ -15,12 +15,13 @@
     {
       "matches": ["https://mail.google.com/*"],
       "js": ["content.js"],
+      "type": "module",
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["pdf-lib.min.js", "supabase.js"],
+      "resources": ["pdf-lib.min.js"],
       "matches": ["<all_urls>"]
     }
   ],
