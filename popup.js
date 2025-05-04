@@ -1,104 +1,68 @@
-const { PDFDocument, degrees } = PDFLib;
+Outseta.nocode.user.get().then(async user => {
+  const userEmail = user?.email;
+  const encodedEmail = encodeURIComponent(userEmail);
 
-const LOGO_PATH = "https://dvzmnikrvkvgragzhrof.supabase.co/storage/v1/object/public/logos/1christinaduncan@gmail.com/logo-1746324106120.png";
-const HOLOGRAM_URL = "https://www.aquamark.io/hologram.png";
+  const LOGO_PATH = `https://dvzmnikrvkvgragzhrof.supabase.co/storage/v1/object/public/logos/${encodedEmail}/logo.jpg`;
+  const HOLOGRAM_URL = "https://www.aquamark.io/hologram.png";
 
-document.getElementById("processBtn").addEventListener("click", async () => {
-  const status = document.getElementById("status");
-  const input = document.getElementById("pdfInput");
+  document.getElementById("processBtn").addEventListener("click", async () => {
+    const status = document.getElementById("status");
+    const input = document.getElementById("pdfInput");
 
-  if (!input.files.length) {
-    status.textContent = "Please select at least one PDF.";
-    return;
-  }
+    if (!input.files.length) {
+      status.textContent = "Please upload at least one PDF.";
+      return;
+    }
 
-  for (const file of input.files) {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-
-      // Attempt to load PDF
-      let pdfDoc;
+    for (const file of input.files) {
       try {
-        pdfDoc = await PDFDocument.load(arrayBuffer);
-      } catch (e) {
-        status.textContent = `Failed to read PDF: ${file.name}`;
-        continue;
-      }
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+        const pngImage = await pdfDoc.embedPng(LOGO_PATH);
+        const holoImage = await pdfDoc.embedPng(HOLOGRAM_URL);
+        const pages = pdfDoc.getPages();
 
-      // Load logo from Supabase
-      const logoResponse = await fetch(LOGO_PATH);
-      const logoBytes = await logoResponse.arrayBuffer();
-      const contentType = logoResponse.headers.get("Content-Type");
+        for (const page of pages) {
+          const { width, height } = page.getSize();
 
-      let logoImage;
-      if (contentType === "image/png") {
-        logoImage = await pdfDoc.embedPng(logoBytes);
-      } else if (contentType === "image/jpeg" || contentType === "image/jpg") {
-        logoImage = await pdfDoc.embedJpg(logoBytes);
-      } else {
-        status.textContent = "Unsupported logo format.";
-        return;
-      }
-
-      const logoDims = logoImage.scale(0.3);
-      const pages = pdfDoc.getPages();
-
-      // Load hologram (optional)
-      let hologramImage = null;
-      try {
-        const hologramResponse = await fetch(HOLOGRAM_URL);
-        const hologramBytes = await hologramResponse.arrayBuffer();
-        hologramImage = await pdfDoc.embedPng(hologramBytes);
-      } catch (err) {
-        console.warn("Hologram failed to load.");
-      }
-
-      // Watermark all pages
-      for (const page of pages) {
-        const { width, height } = page.getSize();
-
-        // Tiled logo watermark
-        for (let x = 0; x < width; x += logoDims.width + 100) {
-          for (let y = 0; y < height; y += logoDims.height + 100) {
-            page.drawImage(logoImage, {
-              x,
-              y,
-              width: logoDims.width,
-              height: logoDims.height,
-              opacity: 0.15,
-              rotate: degrees(45),
-            });
+          // Tile logo watermark diagonally
+          const logoWidth = pngImage.width * 0.25;
+          const logoHeight = pngImage.height * 0.25;
+          for (let y = -logoHeight; y < height + logoHeight; y += logoHeight * 2) {
+            for (let x = -logoWidth; x < width + logoWidth; x += logoWidth * 2) {
+              page.drawImage(pngImage, {
+                x,
+                y,
+                width: logoWidth,
+                height: logoHeight,
+                opacity: 0.4,
+                rotate: PDFLib.degrees(45)
+              });
+            }
           }
-        }
 
-        // Bottom-right hologram
-        if (hologramImage) {
-          page.drawImage(hologramImage, {
-            x: width - 50,
-            y: height - 50,
-            width: 40,
-            height: 40,
-            opacity: 0.7,
+          // Full-page hologram overlay
+          page.drawImage(holoImage, {
+            x: 0,
+            y: 0,
+            width,
+            height,
+            opacity: 0.07
           });
         }
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${file.name.replace(".pdf", "")}_protected.pdf`;
+        a.click();
+      } catch (err) {
+        status.textContent = `Error processing ${file.name}`;
+        console.error(err);
       }
-
-      // Save and download
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      const downloadLink = document.createElement("a");
-      const baseName = file.name.replace(/\.pdf$/i, "");
-      downloadLink.href = url;
-      downloadLink.download = `${baseName}-protected.pdf`;
-      downloadLink.click();
-      URL.revokeObjectURL(url);
-
-      status.textContent = "Watermarking complete!";
-    } catch (error) {
-      console.error("Error watermarking:", error);
-      status.textContent = `Error processing: ${file.name}`;
     }
-  }
+
+    status.textContent = "Watermarking complete.";
+  });
 });
