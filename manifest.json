@@ -4,7 +4,11 @@
   "version": "1.0",
   "description": "Watermark Gmail attachments with your Aquamark logo.",
   "permissions": ["scripting", "downloads", "activeTab", "storage"],
-  "host_permissions": ["https://mail.google.com/*", "https://*.supabase.co/*", "https://aquamark-render.onrender.com/*"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://*.supabase.co/*",
+    "https://aquamark-decrypt.onrender.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -25,7 +29,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["hologram.png"],
+      "resources": ["icon.png"],
       "matches": ["<all_urls>"]
     }
   ]
