@@ -20,7 +20,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["pdf-lib.min.js"],
+      "resources": ["pdf-lib.min.js", "supabase.js"],
       "matches": ["<all_urls>"]
     }
   ],
