@@ -62,7 +62,7 @@ async function watermarkPDF(pdfBytes, userEmail) {
   const pages = pdfDoc.getPages();
 
   // Fetch your stored logo (replace with Supabase fetch later)
-  const logoUrl = 'https://www.aquamark.io/logo.jpg';
+  const logoUrl = 'https://www.aquamark.io/logo.png';
   const logoImageBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
   const logoImage = await pdfDoc.embedJpg(logoImageBytes);
 
