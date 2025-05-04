@@ -20,7 +20,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["watermark.js"],
+      "resources": ["pdf-lib.min.js"],
       "matches": ["<all_urls>"]
     }
   ],
