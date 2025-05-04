@@ -3,10 +3,17 @@ const pdfLibScript = document.createElement('script');
 pdfLibScript.src = chrome.runtime.getURL('pdf-lib.min.js');
 document.head.appendChild(pdfLibScript);
 
-// Supabase setup
+// Inject Supabase
+const supabaseScript = document.createElement('script');
+supabaseScript.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+supabaseScript.onload = () => {
+  window.supabaseLoaded = true;
+};
+document.head.appendChild(supabaseScript);
+
+// Supabase config
 const SUPABASE_URL = 'https://dvzmnikrvkvgragzhrof.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2em1uaWtydmt2Z3JhZ3pocm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5Njg5NzUsImV4cCI6MjA1OTU0NDk3NX0.FaHsjIRNlgf6YWbe5foz0kJFtCO4FuVFo7KVcfhKPEk';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Helper: decrypt PDF
 async function decryptPDF(blob) {
@@ -47,13 +54,20 @@ function waitForGmailAttachments() {
 
       iconBtn.addEventListener("click", async () => {
         try {
+          // Wait until Supabase is ready
+          if (!window.supabaseLoaded) {
+            alert("Supabase is still loading. Try again in a second.");
+            return;
+          }
+
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
           const url = link.getAttribute("href");
           const originalName = (link.textContent || "document").replace(".pdf", "");
 
           const profile = await Outseta.getUser();
           const email = profile.Email;
 
-          // Get logo
           const logoListRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/logos/${email}`, {
             headers: { apikey: SUPABASE_KEY }
           });
