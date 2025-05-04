@@ -1,99 +1,141 @@
-// Inject PDFLib into Gmail page
+// Inject PDFLib
 const pdfLibScript = document.createElement('script');
 pdfLibScript.src = chrome.runtime.getURL('pdf-lib.min.js');
-pdfLibScript.onload = () => {
-  console.log('✅ PDFLib loaded into Gmail');
-};
-(document.head || document.documentElement).appendChild(pdfLibScript);
+document.head.appendChild(pdfLibScript);
 
-// Watch for Gmail DOM changes
-const observer = new MutationObserver(() => waitForGmailAttachments());
-observer.observe(document.body, { childList: true, subtree: true });
+// Supabase setup
+const SUPABASE_URL = 'https://dvzmnikrvkvgragzhrof.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2em1uaWtydmt2Z3JhZ3pocm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5Njg5NzUsImV4cCI6MjA1OTU0NDk3NX0.FaHsjIRNlgf6YWbe5foz0kJFtCO4FuVFo7KVcfhKPEk';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Add logo button next to each PDF
-function waitForGmailAttachments() {
-  const attachments = document.querySelectorAll('div.aQH');
-
-  attachments.forEach(section => {
-    const pdfLinks = section.querySelectorAll('a[href$=".pdf"]');
-
-    pdfLinks.forEach(link => {
-      if (link.parentElement.querySelector('.aquamark-icon-btn')) return;
-
-      const iconBtn = document.createElement("img");
-      iconBtn.src = "https://www.aquamark.io/logo.png";
-      iconBtn.title = "Watermark this file";
-      iconBtn.className = "aquamark-icon-btn";
-iconBtn.style.width = "27px";
-iconBtn.style.height = "27px";
-iconBtn.style.margin = "1px 2px 0 -2px"; // top right bottom left
-iconBtn.style.cursor = "pointer";
-iconBtn.style.verticalAlign = "middle";
-iconBtn.style.borderRadius = "4px";
-iconBtn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
-
-
-      iconBtn.addEventListener("click", async () => {
-        const url = link.getAttribute("href");
-        const filename = (link.textContent || "document").trim();
-
-        try {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          const arrayBuffer = await blob.arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-
-          const outputBytes = await watermarkPDF(uint8Array, "test@example.com");
-          if (outputBytes) {
-            const blobOut = new Blob([outputBytes], { type: "application/pdf" });
-            const downloadUrl = URL.createObjectURL(blobOut);
-            const a = document.createElement("a");
-            a.href = downloadUrl;
-            a.download = `watermarked-${filename}`;
-            a.click();
-            URL.revokeObjectURL(downloadUrl);
-          }
-        } catch (err) {
-          console.error("Watermarking failed for", filename, err);
-          alert(`Failed to watermark ${filename}`);
-        }
-      });
-
-      link.parentElement.appendChild(iconBtn);
-    });
+// Helper: decrypt PDF
+async function decryptPDF(blob) {
+  const formData = new FormData();
+  formData.append("file", blob);
+  const response = await fetch("https://aquamark-decrypt.onrender.com/decrypt", {
+    method: "POST",
+    body: formData,
   });
+  if (!response.ok) throw new Error("Decryption failed");
+  return await response.arrayBuffer();
 }
 
-// ---- Embedded Watermark Logic ----
+// Observe Gmail for attachment buttons
+const observer = new MutationObserver(() => {
+  const links = document.querySelectorAll('a[href$=".pdf"]:not([data-aquamark])');
+  links.forEach(link => {
+    link.dataset.aquamark = "true";
 
-async function watermarkPDF(pdfBytes, userEmail) {
-  const { PDFDocument, rgb } = window.PDFLib;
+    const iconBtn = document.createElement("img");
+    iconBtn.src = "https://www.aquamark.io/logo.png";
+    iconBtn.title = "Watermark this file";
+    iconBtn.style.width = "27px";
+    iconBtn.style.height = "27px";
+    iconBtn.style.margin = "0 2px 0 0";
+    iconBtn.style.cursor = "pointer";
+    iconBtn.style.verticalAlign = "middle";
+    iconBtn.style.borderRadius = "4px";
+    iconBtn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
 
-  const pdfDoc = await PDFDocument.load(pdfBytes);
-  const pages = pdfDoc.getPages();
+    iconBtn.addEventListener("click", async () => {
+      try {
+        const url = link.getAttribute("href");
+        const originalName = (link.textContent || "document").replace(".pdf", "");
 
-  // Use your live logo for now
-  const logoUrl = 'https://www.aquamark.io/logo.png';
-  const logoImageBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
-  const logoImage = await pdfDoc.embedPng(logoImageBytes);
+        const profile = await Outseta.getUser();
+        const email = profile.Email;
 
-  for (const page of pages) {
-    const { width, height } = page.getSize();
-    const imgDims = logoImage.scale(0.2);
-
-    for (let x = 0; x < width; x += imgDims.width * 2) {
-      for (let y = 0; y < height; y += imgDims.height * 2) {
-        page.drawImage(logoImage, {
-          x: x,
-          y: y,
-          width: imgDims.width,
-          height: imgDims.height,
-          rotate: { type: 'degrees', angle: 45 },
-          opacity: 0.15,
+        // Get latest logo name from Supabase
+        const logoListRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/logos/${email}`, {
+          headers: { apikey: SUPABASE_KEY }
         });
-      }
-    }
-  }
+        const logoList = await logoListRes.json();
+        const logoFile = logoList?.[0]?.name;
+        if (!logoFile) throw new Error("No logo found");
+        const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/logos/${email}/${logoFile}`;
 
-  return await pdfDoc.save();
-}
+        const hologramUrl = "https://www.aquamark.io/hologram.png";
+
+        // Fetch PDF
+        let response = await fetch(url);
+        let blob = await response.blob();
+        let arrayBuffer;
+        try {
+          arrayBuffer = await blob.arrayBuffer();
+          await PDFLib.PDFDocument.load(arrayBuffer);
+        } catch {
+          arrayBuffer = await decryptPDF(blob);
+        }
+
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+        const pages = pdfDoc.getPages();
+
+        const logoBytes = await fetch(logoUrl).then(r => r.arrayBuffer());
+        const embeddedLogo = await pdfDoc.embedPng(logoBytes);
+        const logoDims = embeddedLogo.scale(0.35);
+
+        const hologramBytes = await fetch(hologramUrl).then(r => r.arrayBuffer());
+        const hologramImage = await pdfDoc.embedPng(hologramBytes);
+
+        // Check page count and user credits
+        const usageRes = await supabase.from('usage').select('*').eq('user_email', email).single();
+        const usage = usageRes.data;
+        if (!usage || usage.pages_remaining < pages.length) {
+          alert(`❌ Not enough page credits. You need ${pages.length}, but have ${usage?.pages_remaining || 0}.`);
+          return;
+        }
+
+        // Watermark pages
+        for (const page of pages) {
+          const { width, height } = page.getSize();
+
+          // Tiled logo
+          for (let x = 0; x < width; x += (logoDims.width + 100)) {
+            for (let y = 0; y < height; y += (logoDims.height + 100)) {
+              page.drawImage(embeddedLogo, {
+                x, y,
+                width: logoDims.width,
+                height: logoDims.height,
+                rotate: PDFLib.degrees(45),
+                opacity: 0.15
+              });
+            }
+          }
+
+          // Top-right hologram
+          page.drawImage(hologramImage, {
+            x: width - 55,
+            y: height - 55,
+            width: 45,
+            height: 45,
+            opacity: 0.7
+          });
+        }
+
+        // Update Supabase usage
+        const updatedUsed = usage.pages_used + pages.length;
+        const updatedRemaining = usage.page_credits - updatedUsed;
+        await supabase.from('usage').update({
+          pages_used: updatedUsed,
+          pages_remaining: updatedRemaining
+        }).eq('user_email', email);
+
+        // Save + download
+        const finalPdf = await pdfDoc.save();
+        const blobOut = new Blob([finalPdf], { type: "application/pdf" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blobOut);
+        a.download = `${originalName} - protected.pdf`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch (err) {
+        console.error("❌ Error watermarking:", err);
+        alert("❌ Failed to watermark file. See console for details.");
+      }
+    });
+
+    link.parentElement?.appendChild(iconBtn);
+  });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
