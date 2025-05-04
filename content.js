@@ -10,49 +10,56 @@ pdfLibScript.onload = () => {
 const observer = new MutationObserver(() => waitForGmailAttachments());
 observer.observe(document.body, { childList: true, subtree: true });
 
+// Add logo button next to each PDF
 function waitForGmailAttachments() {
-  const attachments = document.querySelectorAll('div.aQH'); // Gmail inbox attachment blocks
+  const attachments = document.querySelectorAll('div.aQH');
 
-  attachments.forEach(card => {
-    if (!card.querySelector('.aquamark-btn')) {
-      const pdfLink = card.querySelector('a[href$=".pdf"]');
-      if (!pdfLink) return;
+  attachments.forEach(section => {
+    const pdfLinks = section.querySelectorAll('a[href$=".pdf"]');
 
-      const watermarkBtn = document.createElement("button");
-      watermarkBtn.innerText = "Watermark";
-      watermarkBtn.className = "aquamark-btn";
-      watermarkBtn.style.marginLeft = "8px";
-      watermarkBtn.style.padding = "4px 8px";
-      watermarkBtn.style.fontSize = "12px";
-      watermarkBtn.style.background = "#4f46e5";
-      watermarkBtn.style.color = "#fff";
-      watermarkBtn.style.border = "none";
-      watermarkBtn.style.borderRadius = "4px";
-      watermarkBtn.style.cursor = "pointer";
+    pdfLinks.forEach(link => {
+      if (link.parentElement.querySelector('.aquamark-icon-btn')) return;
 
-      watermarkBtn.addEventListener("click", async () => {
-        const url = pdfLink.getAttribute("href");
-        if (!url) return alert("Could not find PDF URL.");
+      const iconBtn = document.createElement("img");
+      iconBtn.src = "https://www.aquamark.io/logo.png";
+      iconBtn.title = "Watermark this file";
+      iconBtn.className = "aquamark-icon-btn";
+      iconBtn.style.width = "20px";
+      iconBtn.style.height = "20px";
+      iconBtn.style.marginLeft = "6px";
+      iconBtn.style.cursor = "pointer";
+      iconBtn.style.verticalAlign = "middle";
+      iconBtn.style.borderRadius = "4px";
+      iconBtn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
 
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+      iconBtn.addEventListener("click", async () => {
+        const url = link.getAttribute("href");
+        const filename = (link.textContent || "document").trim();
 
-        const outputBytes = await watermarkPDF(uint8Array, "test@example.com");
-        if (outputBytes) {
-          const blobOut = new Blob([outputBytes], { type: "application/pdf" });
-          const downloadUrl = URL.createObjectURL(blobOut);
-          const a = document.createElement("a");
-          a.href = downloadUrl;
-          a.download = "watermarked.pdf";
-          a.click();
-          URL.revokeObjectURL(downloadUrl);
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+
+          const outputBytes = await watermarkPDF(uint8Array, "test@example.com");
+          if (outputBytes) {
+            const blobOut = new Blob([outputBytes], { type: "application/pdf" });
+            const downloadUrl = URL.createObjectURL(blobOut);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `watermarked-${filename}`;
+            a.click();
+            URL.revokeObjectURL(downloadUrl);
+          }
+        } catch (err) {
+          console.error("Watermarking failed for", filename, err);
+          alert(`Failed to watermark ${filename}`);
         }
       });
 
-      card.appendChild(watermarkBtn);
-    }
+      link.parentElement.appendChild(iconBtn);
+    });
   });
 }
 
@@ -64,7 +71,7 @@ async function watermarkPDF(pdfBytes, userEmail) {
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const pages = pdfDoc.getPages();
 
-  // Use your current logo (public GitHub version)
+  // Use your live logo for now
   const logoUrl = 'https://www.aquamark.io/logo.png';
   const logoImageBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
   const logoImage = await pdfDoc.embedPng(logoImageBytes);
