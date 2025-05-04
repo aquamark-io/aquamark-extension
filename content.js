@@ -1,6 +1,10 @@
 function injectAquamarkButtons() {
-  const buttons = document.querySelectorAll('.aQw:not([data-aquamark])');
+  const buttons = document.querySelectorAll('.aQw');
+
   buttons.forEach(btn => {
+    // Skip if our icon is already inside this specific button
+    if (btn.querySelector('[data-aquamark]')) return;
+
     const icon = document.createElement("img");
     icon.src = chrome.runtime.getURL("logo.png");
     icon.style.height = "20px";
@@ -10,11 +14,16 @@ function injectAquamarkButtons() {
     icon.setAttribute("data-aquamark", "true");
 
     icon.addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "watermark", fileName: "dummy.pdf" });
+      const fileName = btn.closest('.aQH')?.innerText?.trim() || 'protected.pdf';
+      chrome.runtime.sendMessage({ type: "watermark", fileName });
     });
 
     btn.appendChild(icon);
   });
 }
 
-setInterval(injectAquamarkButtons, 2000);
+// Wait for Gmail to load, then inject once and again only when DOM changes
+const observer = new MutationObserver(injectAquamarkButtons);
+observer.observe(document.body, { childList: true, subtree: true });
+
+injectAquamarkButtons(); // initial run
