@@ -2,7 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import * as PDFLib from 'https://unpkg.com/pdf-lib@1.17.1/+esm';
 
 const SUPABASE_URL = 'https://dvzmnikrvkvgragzhrof.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2em1uaWtydmt2Z3JhZ3pocm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5Njg5NzUsImV4cCI6MjA1OTU0NDk3NX0.FaHsjIRNlgf6YWbe5foz0kJFtCO4FuVFo7KVcfhKPEk'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2em1uaWtydmt2Z3JhZ3pocm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5Njg5NzUsImV4cCI6MjA1OTU0NDk3NX0.FaHsjIRNlgf6YWbe5foz0kJFtCO4FuVFo7KVcfhKPEk';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -27,12 +27,16 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       for (const file of files) {
         const pdfBytes = await tryDecryptPDF(file);
         const processedBytes = await watermarkPDF(pdfBytes, logoBytes, hologramBytes);
-        triggerDownload(file.name.replace('.pdf', '') + ' - protected.pdf', processedBytes);
 
-        // Update usage
+        const tempPdf = await PDFLib.PDFDocument.load(pdfBytes);
+        const pageCount = tempPdf.getPageCount();
+        usage.pages_used += pageCount;
+
         await supabase.from('usage')
-          .update({ pages_used: usage.pages_used += PDFLib.PDFDocument.load(pdfBytes).getPageCount() })
+          .update({ pages_used: usage.pages_used })
           .eq('user_email', user.Email);
+
+        triggerDownload(file.name.replace('.pdf', '') + ' - protected.pdf', processedBytes);
       }
 
       alert("✅ Files watermarked and downloaded.");
@@ -44,7 +48,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
 });
 
-// Helpers
+// === Helper Functions ===
+
 async function getOutsetaUser() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return await chrome.scripting.executeScript({
@@ -55,9 +60,11 @@ async function getOutsetaUser() {
 
 async function fetchLogoUrl(email) {
   const { data: files } = await supabase.storage.from("logos").list(email);
-  const latest = files.filter(f => f.name.startsWith("logo-")).sort((a, b) =>
-    parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1])
-  )[0];
+  const latest = files
+    .filter(f => f.name.startsWith("logo-"))
+    .sort((a, b) => parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1]))
+    .pop();
+
   return supabase.storage.from("logos").getPublicUrl(`${email}/${latest.name}`).data.publicUrl;
 }
 
@@ -141,7 +148,7 @@ async function watermarkPDF(pdfBytes, logoBytes, hologramBytes) {
   for (const page of pages) {
     const { width, height } = page.getSize();
 
-    // Tile the logo
+    // Tile logo across page
     for (let x = 0; x < width; x += logoDims.width + 100) {
       for (let y = 0; y < height; y += logoDims.height + 100) {
         page.drawImage(logoImg, {
@@ -154,7 +161,7 @@ async function watermarkPDF(pdfBytes, logoBytes, hologramBytes) {
       }
     }
 
-    // Add hologram
+    // Add hologram bottom-right
     if (hologramImg) {
       page.drawImage(hologramImg, {
         x: width - 55,
