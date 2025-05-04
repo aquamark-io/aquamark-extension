@@ -24,13 +24,14 @@ function waitForGmailAttachments() {
       iconBtn.src = "https://www.aquamark.io/logo.png";
       iconBtn.title = "Watermark this file";
       iconBtn.className = "aquamark-icon-btn";
-    iconBtn.style.width = "27px";
+iconBtn.style.width = "27px";
 iconBtn.style.height = "27px";
-iconBtn.style.margin = "0 2px 0 0";
+iconBtn.style.margin = "1px 2px 0 -2px"; // top right bottom left
 iconBtn.style.cursor = "pointer";
-iconBtn.style.verticalAlign = "top";
+iconBtn.style.verticalAlign = "middle";
 iconBtn.style.borderRadius = "4px";
 iconBtn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
+
 
       iconBtn.addEventListener("click", async () => {
         const url = link.getAttribute("href");
