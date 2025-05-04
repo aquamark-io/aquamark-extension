@@ -38,6 +38,17 @@ async function decryptPDF(blob) {
   return await response.arrayBuffer();
 }
 
+// Helper: wait until Supabase is ready
+function waitForSupabaseAndRun(callback, retries = 10) {
+  if (window.supabase && window.supabase.createClient) {
+    callback();
+  } else if (retries > 0) {
+    setTimeout(() => waitForSupabaseAndRun(callback, retries - 1), 500);
+  } else {
+    alert("Supabase failed to load. Please try again or reload Gmail.");
+  }
+}
+
 // Watermark handler
 async function handleWatermarkClick(link) {
   try {
@@ -159,17 +170,7 @@ function waitForGmailAttachments() {
       iconBtn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
 
       iconBtn.addEventListener("click", () => {
-        if (window.supabaseLoaded) {
-          handleWatermarkClick(link);
-        } else {
-          setTimeout(() => {
-            if (window.supabaseLoaded) {
-              handleWatermarkClick(link);
-            } else {
-              alert("Supabase is still loading. Try again in a few seconds.");
-            }
-          }, 1000);
-        }
+        waitForSupabaseAndRun(() => handleWatermarkClick(link));
       });
 
       link.parentElement.appendChild(iconBtn);
