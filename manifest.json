@@ -2,25 +2,26 @@
   "manifest_version": 3,
   "name": "Aquamark Gmail Watermarker",
   "version": "1.0",
-  "description": "Automatically watermark PDF attachments in Gmail using your stored Aquamark logo.",
-  "permissions": ["scripting", "activeTab", "storage"],
+  "description": "Watermark Gmail attachments with your Aquamark logo.",
+  "permissions": ["scripting", "activeTab", "downloads"],
   "host_permissions": ["https://mail.google.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
-  "web_accessible_resources": [
+  "content_scripts": [
     {
-      "resources": ["pdf-lib.min.js"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
-    "default_title": "Aquamark",
     "default_icon": {
       "16": "icon16.png",
       "48": "icon48.png",
       "128": "icon128.png"
-    }
+    },
+    "default_title": "Aquamark"
   }
 }
