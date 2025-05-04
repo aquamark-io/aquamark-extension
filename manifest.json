@@ -1,25 +1,35 @@
 {
   "manifest_version": 3,
-  "name": "Aquamark Watermarker",
+  "name": "Aquamark Gmail Watermarker",
   "version": "1.0",
-  "description": "Watermark bank statements directly from Gmail.",
-  "permissions": ["storage", "downloads", "scripting", "activeTab"],
-  "host_permissions": ["https://dvzmnikrvkvgragzhrof.supabase.co/*"],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon-16.png",
-      "48": "icon-48.png",
-      "128": "icon-128.png"
+  "description": "Automatically watermark PDF attachments in Gmail using your stored Aquamark logo.",
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
-  },
+  ],
   "web_accessible_resources": [
     {
-      "resources": ["hologram.png"],
+      "resources": ["watermark.js"],
       "matches": ["<all_urls>"]
     }
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';"
+  "action": {
+    "default_title": "Aquamark",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   }
 }
