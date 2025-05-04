@@ -12,8 +12,10 @@
     "https://mail.google.com/*",
     "https://dvzmnikrvkvgragzhrof.supabase.co/*"
   ],
-  "background": {
-    "service_worker": "background.js"
+"background": {
+  "service_worker": "background.js",
+  "type": "module"
+},
   },
   "content_scripts": [
     {
@@ -30,10 +32,9 @@
   "action": {
     "default_title": "Aquamark"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["logo.png"],
-      "matches": ["<all_urls>"]
-    }
-  ]
-}
+ "web_accessible_resources": [
+  {
+    "resources": ["pdf-lib.min.js", "logo.png"],
+    "matches": ["<all_urls>"]
+  }
+]
